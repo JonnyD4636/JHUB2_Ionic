@@ -1,0 +1,7 @@
+{
+  "name": "JHub Mod 2 Ionic",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}

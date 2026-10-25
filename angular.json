@@ -31,7 +31,9 @@
                 "glob": "**/*",
                 "input": "src/assets",
                 "output": "assets"
-              }
+              },
+              "src/manifest.webmanifest",
+              "src/sw.js"
             ],
             "styles": ["src/global.scss", "src/theme/variables.scss"],
             "scripts": [],
@@ -47,8 +49,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "9kb",
+                  "maximumError": "10kb"
                 }
               ],
               "fileReplacements": [
@@ -134,3 +136,8 @@
     }
   }
 }
+
+
+
+
+

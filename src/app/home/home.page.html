@@ -1,20 +1,50 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Blank
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
-
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
-  </div>
+  <main class="page">
+    <header class="topbar"><div class="brand"><span class="brand-icon" aria-hidden="true">▤</span><span>Receipt<span class="brand-accent">ly</span></span></div></header>
+    <section class="intro" aria-labelledby="page-title"><h1 id="page-title">Keep every claim<br><em>accounted for.</em></h1><p class="intro-copy">Create a claim for each journey or occasion, then keep its expenses together. Add receipt photos or digital copies, and record a reference when a receipt is missing.</p></section>
+    <section class="claims-section" aria-labelledby="claims-title">
+      <div class="claims-heading"><div><h2 id="claims-title">Claims</h2></div><button class="add-button" type="button" (click)="openClaimEditor()"><span aria-hidden="true">＋</span> New claim</button></div>
+      <div class="claim-tabs"><button type="button" [class.active]="!showArchived" (click)="showArchived && toggleArchiveView()">Active</button><button type="button" [class.active]="showArchived" (click)="!showArchived && toggleArchiveView()">Archived</button></div>
+      @if (visibleClaims.length === 0) { <div class="claim-empty">{{ showArchived ? 'No archived claims.' : 'Create a claim to start recording expenses.' }}</div> }
+      @else { <div class="claim-list">@for (claim of visibleClaims; track claim.id) { <button class="claim-card" type="button" [class.selected]="selectedClaimId === claim.id" (click)="selectClaim(claim)"><span><strong>{{ claim.name }}</strong><small>{{ claimCount(claim.id) }} {{ claimCount(claim.id) === 1 ? 'expense' : 'expenses' }}</small></span><b>{{ formatMoney(claimTotal(claim.id)) }}</b></button> }</div> }
+    </section>
+    @if (error() && !editorOpen && !claimEditorOpen) { <p class="message error" role="alert">{{ error() }}</p> }
+    @if (selectedClaim; as claim) {
+      <section class="summary" aria-label="Selected claim total"><div><p class="summary-label">{{ claim.archived ? 'ARCHIVED CLAIM' : 'CURRENT CLAIM' }} · {{ claim.name }}</p><p class="summary-value">{{ formatMoney(totalPence) }}</p><p class="summary-count">{{ claimReceipts.length }} {{ claimReceipts.length === 1 ? 'expense' : 'expenses' }} in this claim</p></div><div class="summary-mark" aria-hidden="true">£</div></section>
+      <div class="claim-actions"><button type="button" [disabled]="exporting()" (click)="exportClaim()">{{ exporting() ? 'Preparing PDF…' : 'Export PDF' }}</button><button type="button" (click)="openClaimEditor(claim)">Rename</button><button type="button" (click)="toggleArchive()">{{ claim.archived ? 'Restore claim' : 'Archive claim' }}</button><button type="button" class="danger-action" (click)="deleteClaim()">Delete claim</button></div>
+      <div class="list-heading"><div><p class="eyebrow">{{ claim.name }}</p><h2>Expenses</h2></div>@if (!claim.archived) { <button class="add-button" type="button" (click)="openNew()"><span aria-hidden="true">＋</span> Add expense</button> }</div>
+      @if (claimReceipts.length === 0) { <div class="empty-state"><div class="empty-icon" aria-hidden="true">▧</div><h3>No expenses yet</h3><p>{{ claim.archived ? 'This archived claim has no expenses.' : 'Add a receipt or a manual entry to this claim.' }}</p>@if (!claim.archived) { <button class="text-button" type="button" (click)="openNew()">Add your first expense <span aria-hidden="true">→</span></button> }</div> }
+      @else { <div class="receipt-list">@for (receipt of claimReceipts; track receipt.id) { <button class="receipt-card" type="button" [disabled]="claim.archived" (click)="openEdit(receipt)" [attr.aria-label]="'Edit expense for ' + formatMoney(receipt.amountPence)">@if (receipt.photoUrl) { <img [src]="receipt.photoUrl" alt="" /> } @else { <span class="receipt-placeholder" aria-hidden="true">{{ receipt.photo ? 'PDF' : 'REF' }}</span> }<span class="receipt-details"><strong>{{ receipt.description || receipt.serial || 'Expense' }}</strong><small>{{ receipt.source === 'manual' ? 'Missing receipt' : receipt.photo?.type === 'application/pdf' ? 'Digital PDF' : receipt.source === 'upload' ? 'Uploaded receipt' : 'Photo receipt' }} · {{ receipt.capturedAt | date:'d MMM y, HH:mm' }}</small>@if (receipt.serial) { <small>Ref: {{ receipt.serial }}</small> }</span><span class="receipt-amount">{{ formatMoney(receipt.amountPence) }}</span><span class="chevron" aria-hidden="true">›</span></button> }</div> }
+    }    <footer class="site-footer">© Jonny D 2026</footer>
+  </main>
+  @if (claimEditorOpen) {
+    <div class="modal-backdrop" (click)="closeClaimEditor()"></div>
+    <section class="editor claim-editor" role="dialog" aria-modal="true" aria-labelledby="claim-editor-title"><div class="editor-head"><div><p class="eyebrow">CLAIM DETAILS</p><h2 id="claim-editor-title">{{ claimEditingId ? 'Rename claim' : 'New claim' }}</h2></div><button class="close-button" type="button" aria-label="Close" (click)="closeClaimEditor()">×</button></div><div class="editor-body"><label class="field-label" for="claim-name">Claim name <span>*</span></label><input class="description-field" id="claim-name" type="text" maxlength="80" placeholder="e.g. Bristol trip — outward journey" [(ngModel)]="claimName" />@if (error()) { <p class="message error" role="alert">{{ error() }}</p> }<button class="save-button" type="button" [disabled]="!claimName.trim() || busy()" (click)="saveClaim()">{{ claimEditingId ? 'Save name' : 'Create claim' }}</button></div></section>
+  }
+  @if (editorOpen) {
+    <div class="modal-backdrop" (click)="closeEditor()"></div>
+    <section class="editor" role="dialog" aria-modal="true" aria-labelledby="editor-title">
+      <div class="editor-head"><div><p class="eyebrow">EXPENSE DETAILS</p><h2 id="editor-title">{{ editingId ? 'Edit expense' : 'Add an expense' }}</h2></div><button class="close-button" type="button" aria-label="Close" (click)="closeEditor()">×</button></div>
+      <div class="editor-body">
+        <p class="field-label">Receipt evidence</p>
+        <div class="source-options" role="group" aria-label="Receipt evidence type"><button type="button" [class.selected]="source === 'camera'" (click)="setSource('camera')">Take photo</button><button type="button" [class.selected]="source === 'upload'" (click)="setSource('upload')">Upload file</button><button type="button" [class.selected]="source === 'manual'" (click)="setSource('manual')">No receipt</button></div>
+        @if (source === 'camera' || source === 'upload') {
+          <label class="photo-picker" [class.has-photo]="previewUrl || photo">@if (previewUrl) { <img [src]="previewUrl" alt="Selected receipt photo" /> } @else if (photo) { <span class="camera-icon" aria-hidden="true">PDF</span><strong>PDF receipt selected</strong><small>Tap to replace the file</small> } @else { <span class="camera-icon" aria-hidden="true">▧</span><strong>{{ source === 'camera' ? 'Take a receipt photo' : 'Choose a photo or PDF' }}</strong><small>{{ source === 'camera' ? 'Use your device camera' : 'Digital and previously photographed receipts' }}</small> }
+            @if (source === 'camera') { <input type="file" accept="image/*" capture="environment" (change)="choosePhoto($event, 'camera')" aria-label="Take a receipt photo" /> } @else { <input type="file" accept="image/*,application/pdf" (change)="choosePhoto($event, 'upload')" aria-label="Upload a receipt photo or PDF" /> }
+          </label>
+          @if (photo) { <p class="photo-hint">{{ source === 'camera' ? 'Captured' : 'Added' }} {{ capturedAt | date:'d MMM y, HH:mm' }}</p> }
+        } @else { <p class="manual-hint">Use this when the receipt is missing. Enter its serial or another reference so the claim can be identified later.</p> }
+        <label class="field-label" for="amount">Amount to claim <span>*</span></label><div class="amount-field"><span aria-hidden="true">£</span><input id="amount" type="text" inputmode="decimal" autocomplete="off" placeholder="0.00" [(ngModel)]="amount" /></div>
+        <label class="field-label" for="serial">Receipt serial / reference @if (source === 'manual') { <span>*</span> } @else { <small>Optional</small> }</label><input class="description-field" id="serial" type="text" maxlength="100" placeholder="e.g. invoice or transaction number" [(ngModel)]="serial" />
+        <label class="field-label" for="description">Description <small>Optional</small></label><input class="description-field" id="description" type="text" maxlength="80" placeholder="e.g. Train ticket" [(ngModel)]="description" />
+        @if (error()) { <p class="message error" role="alert">{{ error() }}</p> }
+        <button class="save-button" type="button" [disabled]="!canSave" (click)="save()">{{ busy() ? 'Saving…' : editingId ? 'Save changes' : 'Save expense' }}</button>
+        @if (editingId) { <button class="delete-button" type="button" [disabled]="busy()" (click)="remove()">Delete expense</button> }
+      </div>
+    </section>
+  }
 </ion-content>
+
+
+
+

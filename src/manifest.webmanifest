@@ -1,0 +1,12 @@
+{
+  "name": "Receiptly — Expense Ledger",
+  "short_name": "Receiptly",
+  "description": "Photograph receipts and track your expense claim total.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#111a16",
+  "theme_color": "#111a16",
+  "icons": [{ "src": "assets/icon/app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
+

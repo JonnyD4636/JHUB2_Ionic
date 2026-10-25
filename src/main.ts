@@ -4,6 +4,7 @@ import { IonicRouteStrategy, provideIonicAngular } from '@ionic/angular';
 
 import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
+import { Capacitor } from '@capacitor/core';
 
 bootstrapApplication(AppComponent, {
   providers: [
@@ -12,3 +13,9 @@ bootstrapApplication(AppComponent, {
     provideRouter(routes, withPreloading(PreloadAllModules), withComponentInputBinding()),
   ],
 });
+
+import { environment } from './environments/environment';
+if (environment.production && !Capacitor.isNativePlatform() && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+}
+
